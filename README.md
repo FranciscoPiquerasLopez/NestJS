@@ -6,10 +6,10 @@ Aquí iré subiendo ideas, experimentos, APIs y aplicaciones reales que consider
 Todo está organizado por carpetas, y cada proyecto es independiente 🗂️.
 
 ## 🛠️ Tecnologías utilizadas
-. 🚀 NestJS como framework principal
-. 🧪 Tests con Jest (cuando aplique)
-. 🐘 PostgreSQL / 🐬 MySQL (dependiendo del proyecto)
-. 🐳 Docker (en algunos proyectos)
+- 🚀 NestJS como framework principal
+- 🧪 Tests con Jest (cuando aplique)
+- 🐘 PostgreSQL / 🐬 MySQL (dependiendo del proyecto)
+- 🐳 Docker (en algunos proyectos)
 
 ## 🙌 Contacto
 ¿Tienes alguna sugerencia o quieres comentar algo?
