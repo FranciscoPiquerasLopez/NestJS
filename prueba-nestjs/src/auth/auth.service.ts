@@ -1,6 +1,6 @@
 import { Injectable, HttpException } from '@nestjs/common';
 import { Post } from '@nestjs/common';
-import { RegisterDto } from './dto/register.dto';
+import { UserAuthDto } from './dto/userAuth.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RegisterUserEntity } from './entities/register.entity';
 import { Repository } from 'typeorm';
@@ -13,7 +13,7 @@ export class AuthService {
   ) {}
 
   @Post()
-  async registerUser(user: RegisterDto) {
+  async registerUser(user: UserAuthDto) {
     try {
       const userEntity = this.registerUserRepository.create(user);
       const existingEmail = await this.registerUserRepository.findOneBy({
@@ -29,4 +29,10 @@ export class AuthService {
       throw new HttpException((error as Error).message, 409);
     }
   }
+
+  @Post()
+  loginUser(user: UserAuthDto) {
+    
+  }
+
 }

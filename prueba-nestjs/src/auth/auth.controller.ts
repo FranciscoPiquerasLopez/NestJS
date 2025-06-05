@@ -1,6 +1,6 @@
 import { Body, Controller } from '@nestjs/common';
 import { Post } from '@nestjs/common';
-import { RegisterDto } from './dto/register.dto';
+import { UserAuthDto } from './dto/userAuth.dto';
 import { AuthService } from './auth.service';
 import { RegisterUserEntity } from './entities/register.entity';
 import { hashPassword } from 'src/utils/crypto.utils';
@@ -10,9 +10,9 @@ export class AuthController {
   constructor(private userService: AuthService) {}
 
   @Post('register')
-  async registerUser(@Body() user: RegisterDto): Promise<RegisterUserEntity> {
+  async registerUser(@Body() user: UserAuthDto): Promise<RegisterUserEntity> {
     const hashedPassword = await hashPassword(user.contraseña_usuario);
-    const userWithHashedPassword: RegisterDto = {
+    const userWithHashedPassword: UserAuthDto = {
       correo_usuario: user.correo_usuario,
       contraseña_usuario: hashedPassword,
     };
@@ -20,5 +20,10 @@ export class AuthController {
       userWithHashedPassword,
     );
     return userEntityPromise;
+  }
+
+  @Post('login')
+  loginUser(@Body() user: UserAuthDto): void {
+    
   }
 }
