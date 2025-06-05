@@ -24,6 +24,7 @@ export class AuthController {
 
   @Post('login')
   loginUser(@Body() user: UserAuthDto): void {
-    
+    const userToken = this.userService.loginUser(user);
+    // Devolver el JWT Token al cliente
   }
 }
