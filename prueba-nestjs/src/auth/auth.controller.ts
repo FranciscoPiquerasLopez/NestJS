@@ -4,6 +4,7 @@ import { RegisterDto } from './dto/register.dto';
 import { AuthService } from './auth.service';
 import { RegisterUserEntity } from './entities/register.entity';
 import { hashPassword } from 'src/utils/crypto.utils';
+import { LoginDto } from './dto/login.dto';
 
 @Controller('users')
 export class AuthController {
@@ -23,5 +24,10 @@ export class AuthController {
       userWithHashedPassword,
     );
     return userEntityPromise;
+  }
+
+  @Post('login')
+  async loginUser(@Body user: LoginDto): void {
+    
   }
 }
