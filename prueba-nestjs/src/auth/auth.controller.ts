@@ -8,7 +8,7 @@ import { LoginDto } from './dto/login.dto';
 
 @Controller('users')
 export class AuthController {
-  constructor(private userService: AuthService) {}
+  constructor(private authService: AuthService) {}
 
   @Post('register')
   async registerUser(@Body() user: RegisterDto): Promise<RegisterUserEntity> {
@@ -20,12 +20,15 @@ export class AuthController {
       correo_usuario: user.correo_usuario,
       contraseña_usuario: hashedPassword,
     };
-    const userEntityPromise = await this.userService.registerUser(
+    const userEntityPromise = await this.authService.registerUser(
       userWithHashedPassword,
     );
     return userEntityPromise;
   }
 
   @Post('login')
-  async loginUser(@Body user: LoginDto): Promise<string> {}
+  async loginUser(@Body() user: LoginDto): Promise<{ access_token: string }> {
+    const token = await this.authService.loginUser(user);
+    return token;
+  }
 }

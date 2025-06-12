@@ -6,13 +6,23 @@ import { RegisterUserEntity } from './entities/register.entity';
 import { Repository } from 'typeorm';
 import { LoginDto } from './dto/login.dto';
 import { checkPasswordUser } from 'src/utils/crypto.utils';
+import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
+  // Instancia de JwtService
+  private readonly jwtService: JwtService;
+
   constructor(
     @InjectRepository(RegisterUserEntity)
     private registerUserRepository: Repository<RegisterUserEntity>,
-  ) {}
+  ) {
+    // Construir el token con mi secreto y expiración
+    this.jwtService = new JwtService({
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: '1h' } as JwtSignOptions,
+    });
+  }
 
   @Post()
   async registerUser(user: RegisterDto) {
@@ -46,9 +56,19 @@ export class AuthService {
           user.contraseña_usuario,
           userDb.contraseña_usuario,
         );
-        // TODO: Recuperar el token
+        if (matchPassword) {
+          // Payload del token
+          const payload = {
+            sub: userDb.usuario_id,
+            email: userDb.correo_usuario,
+          };
+          // Devolvemos el token firmado
+          return { access_token: this.jwtService.sign(payload) };
+        } else {
+          throw new Error('Correo o contraseña inválidos');
+        }
       } else {
-
+        throw new Error('Correo o contraseña inválidos');
       }
     } catch (error) {
       throw new HttpException((error as Error).message, 404);
