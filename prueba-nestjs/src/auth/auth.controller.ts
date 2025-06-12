@@ -27,7 +27,5 @@ export class AuthController {
   }
 
   @Post('login')
-  async loginUser(@Body user: LoginDto): void {
-    
-  }
+  async loginUser(@Body user: LoginDto): Promise<string> {}
 }

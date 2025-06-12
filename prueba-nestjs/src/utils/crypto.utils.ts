@@ -9,3 +9,11 @@ export async function hashPassword(contraseña: string): Promise<string> {
     throw new Error(`Error hasheo contraseña ${(error as Error).message}`);
   }
 }
+
+export function checkPasswordUser(
+  myPlainTextPassword: string,
+  hash: string,
+): Promise<boolean> {
+  const result = bcrypt.compare(myPlainTextPassword, hash);
+  return result;
+}
