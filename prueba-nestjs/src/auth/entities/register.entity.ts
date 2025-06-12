@@ -10,4 +10,10 @@ export class RegisterUserEntity {
 
   @Column()
   contraseña_usuario: string;
+
+  @Column()
+  nombre_usuario: string;
+
+  @Column()
+  apellidos_usuario: string;
 }

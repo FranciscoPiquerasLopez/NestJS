@@ -1,6 +1,6 @@
 import { Injectable, HttpException } from '@nestjs/common';
 import { Post } from '@nestjs/common';
-import { UserAuthDto } from './dto/register.dto';
+import { RegisterDto } from './dto/register.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RegisterUserEntity } from './entities/register.entity';
 import { Repository } from 'typeorm';
@@ -13,9 +13,11 @@ export class AuthService {
   ) {}
 
   @Post()
-  async registerUser(user: UserAuthDto) {
+  async registerUser(user: RegisterDto) {
     try {
+      // Creamos la instancia
       const userEntity = this.registerUserRepository.create(user);
+      // Buscamos por correo por si hay un correo repetido
       const existingEmail = await this.registerUserRepository.findOneBy({
         correo_usuario: user.correo_usuario,
       });

@@ -1,6 +1,6 @@
 import { Body, Controller } from '@nestjs/common';
 import { Post } from '@nestjs/common';
-import { UserAuthDto } from './dto/register.dto';
+import { RegisterDto } from './dto/register.dto';
 import { AuthService } from './auth.service';
 import { RegisterUserEntity } from './entities/register.entity';
 import { hashPassword } from 'src/utils/crypto.utils';
@@ -10,10 +10,10 @@ export class AuthController {
   constructor(private userService: AuthService) {}
 
   @Post('register')
-  async registerUser(@Body() user: UserAuthDto): Promise<RegisterUserEntity> {
+  async registerUser(@Body() user: RegisterDto): Promise<RegisterUserEntity> {
     const hashedPassword = await hashPassword(user.contraseña_usuario);
     // Objeto con el correo del usuario y su contraseña pero encriptada
-    const userWithHashedPassword: UserAuthDto = {
+    const userWithHashedPassword: RegisterDto = {
       nombre_usuario: user.nombre_usuario,
       apellidos_usuario: user.apellidos_usuario,
       correo_usuario: user.correo_usuario,
