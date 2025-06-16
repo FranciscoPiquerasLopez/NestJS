@@ -1,4 +1,9 @@
-import { Injectable, HttpException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Post } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -25,55 +30,52 @@ export class AuthService {
 
   @Post()
   async registerUser(user: RegisterDto) {
-    try {
-      // Creamos la instancia
-      const userEntity = this.registerUserRepository.create(user);
-      // Buscamos por correo por si hay un correo repetido
-      const existingEmail = await this.registerUserRepository.findOneBy({
-        correo_usuario: user.correo_usuario,
-      });
-      if (existingEmail) {
-        // Correo ya registrado
-        throw new Error('Error de registro');
-      }
-      // Si no existe, no está duplicado, se guarda
-      return this.registerUserRepository.save(userEntity);
-    } catch (error) {
-      console.log(error);
-      throw new Error('Error de registro');
+    // Creamos la instancia
+    const userEntity = this.registerUserRepository.create(user);
+    // Buscamos por correo por si hay un correo repetido
+    const existingEmail = await this.registerUserRepository.findOneBy({
+      correo_usuario: user.correo_usuario,
+    });
+    if (existingEmail) {
+      // Correo ya registrado
+      // Al lanzar este error, Nest lo capturará y lanzará
+      // automáticamente un 409
+      // Si no, pues caerá el fallo en el filtro global
+      // y mostrará un error 500
+      throw new ConflictException('Correo ya registrado');
     }
+    // Si no existe, no está duplicado, se guarda
+    return this.registerUserRepository.save(userEntity);
   }
 
   @Post()
   async loginUser(user: LoginDto) {
-    try {
-      const userDb = await this.registerUserRepository.findOneBy({
-        correo_usuario: user.correo_usuario,
-      });
-      // Check si existe usuario para evitar el 'undefined'
-      if (userDb) {
-        const matchPassword = await checkPasswordUser(
-          user.contraseña_usuario,
-          userDb.contraseña_usuario,
-        );
-        if (matchPassword) {
-          // Payload del token
-          const payload = {
-            sub: userDb.usuario_id,
-            email: userDb.correo_usuario,
-          };
-          // Generamos token
-          const token = this.jwtService.sign(payload);
-          // Devolvemos token
-          return token;
-        } else {
-          throw new Error('Correo o contraseña inválidos');
-        }
+    const userDb = await this.registerUserRepository.findOneBy({
+      correo_usuario: user.correo_usuario,
+    });
+    // Check si existe usuario para evitar el 'undefined'
+    if (userDb) {
+      const matchPassword = await checkPasswordUser(
+        user.contraseña_usuario,
+        userDb.contraseña_usuario,
+      );
+      if (matchPassword) {
+        // Payload del token
+        const payload = {
+          sub: userDb.usuario_id,
+          email: userDb.correo_usuario,
+        };
+        // Generamos token
+        const token = this.jwtService.sign(payload);
+        // Devolvemos token
+        return token;
       } else {
-        throw new Error('Correo o contraseña inválidos');
+        // 401 Unauthorized
+        throw new UnauthorizedException('Contraseña incorrecta');
       }
-    } catch (error) {
-      throw new HttpException((error as Error).message, 404);
+    } else {
+      // 404 Not Found
+      throw new NotFoundException('Usuario no encontrado en la DB');
     }
   }
 }

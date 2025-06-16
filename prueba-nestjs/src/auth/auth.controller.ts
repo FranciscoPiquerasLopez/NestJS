@@ -1,10 +1,4 @@
-import {
-  Body,
-  ConflictException,
-  Controller,
-  InternalServerErrorException,
-  Res,
-} from '@nestjs/common';
+import { Body, Controller, Res } from '@nestjs/common';
 import { Response as ExpressResponse } from 'express';
 import { Post } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
@@ -18,25 +12,16 @@ export class AuthController {
 
   @Post('register')
   async registerUser(@Body() user: RegisterDto) {
-    try {
-      const hashedPassword = await hashPassword(user.contraseña_usuario);
-      // Objeto con el correo del usuario y su contraseña pero encriptada
-      const userWithHashedPassword: RegisterDto = {
-        nombre_usuario: user.nombre_usuario,
-        apellidos_usuario: user.apellidos_usuario,
-        correo_usuario: user.correo_usuario,
-        contraseña_usuario: hashedPassword,
-      };
-      await this.authService.registerUser(userWithHashedPassword);
-      return { message: 'Registro exitoso' };
-    } catch (error) {
-      if ((error as Error).message === 'Error de registro') {
-        // Lanza una excepción 404
-        throw new ConflictException('Error de registro');
-      }
-      // otro tipo de error -> 500
-      throw new InternalServerErrorException('Error de registro');
-    }
+    const hashedPassword = await hashPassword(user.contraseña_usuario);
+    // Objeto con el correo del usuario y su contraseña pero encriptada
+    const userWithHashedPassword: RegisterDto = {
+      nombre_usuario: user.nombre_usuario,
+      apellidos_usuario: user.apellidos_usuario,
+      correo_usuario: user.correo_usuario,
+      contraseña_usuario: hashedPassword,
+    };
+    await this.authService.registerUser(userWithHashedPassword);
+    return { message: 'Registro exitoso' };
   }
 
   @Post('login')
@@ -44,23 +29,18 @@ export class AuthController {
     @Body() user: LoginDto,
     @Res({ passthrough: true }) res: ExpressResponse,
   ) {
-    try {
-      // 1) Validar usuario/contraseña y obtener token
-      const token = await this.authService.loginUser(user);
-      // 2) Fijamos la cookie
-      res.cookie('access_token', token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'strict',
-        maxAge: 60 * 60 * 1000,
-        path: '/',
-      });
-      // 3) En la respuesta, se encargará Nest para que
-      // así controle el también las CORS
-      return { message: 'Autenticado correctamente' };
-    } catch (error) {
-      console.log(error);
-      throw new InternalServerErrorException((error as Error).message);
-    }
+    // 1) Validar usuario/contraseña y obtener token
+    const token = await this.authService.loginUser(user);
+    // 2) Fijamos la cookie
+    res.cookie('access_token', token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 1000,
+      path: '/',
+    });
+    // 3) En la respuesta, se encargará Nest para que
+    // así controle el también las CORS
+    return { message: 'Autenticado correctamente' };
   }
 }
