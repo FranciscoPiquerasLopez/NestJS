@@ -6,15 +6,22 @@ import { RegisterUserEntity } from './entities/register.entity';
 import { Repository } from 'typeorm';
 import { LoginDto } from './dto/login.dto';
 import { checkPasswordUser } from 'src/utils/crypto.utils';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
+  private readonly jwtService: JwtService;
+
   constructor(
     @InjectRepository(RegisterUserEntity)
     private registerUserRepository: Repository<RegisterUserEntity>,
-    private jwtService: JwtService,
-  ) {}
+  ) {
+    // Construir el token con mi secreto y expiraciónAdd commentMore actions
+    this.jwtService = new JwtService({
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: '1h' } as JwtSignOptions,
+    });
+  }
 
   @Post()
   async registerUser(user: RegisterDto) {
@@ -56,7 +63,7 @@ export class AuthService {
             email: userDb.correo_usuario,
           };
           // Generamos token
-          const token = this.jwtService.sign(payload, { expiresIn: '1h' });
+          const token = this.jwtService.sign(payload);
           // Devolvemos token
           return token;
         } else {
