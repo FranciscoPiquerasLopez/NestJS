@@ -1,4 +1,5 @@
-import { Body, Controller } from '@nestjs/common';
+import { Body, Controller, Res } from '@nestjs/common';
+import { Response as ExpressResponse } from 'express';
 import { Post } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
 import { AuthService } from './auth.service';
@@ -27,8 +28,21 @@ export class AuthController {
   }
 
   @Post('login')
-  async loginUser(@Body() user: LoginDto): Promise<{ access_token: string }> {
+  async loginUser(
+    @Body() user: LoginDto,
+    @Res({ passthrough: true }) res: ExpressResponse,
+  ) {
+    // 1) Validar usuario/contraseña y obtener token
     const token = await this.authService.loginUser(user);
-    return token;
+    // 2) Devolvemos la cookie al cliente
+    res
+      .cookie('access_token', token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+        maxAge: 60 * 60 * 1000,
+        path: '/',
+      })
+      .json({ message: 'Autenticado' });
   }
 }
