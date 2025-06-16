@@ -27,12 +27,13 @@ export class AuthService {
       });
       if (existingEmail) {
         // Correo ya registrado
-        throw new Error('registro no permitido');
+        throw new Error('Error de registro');
       }
       // Si no existe, no está duplicado, se guarda
       return this.registerUserRepository.save(userEntity);
     } catch (error) {
-      throw new HttpException((error as Error).message, 409);
+      console.log(error);
+      throw new Error('Error de registro');
     }
   }
 
