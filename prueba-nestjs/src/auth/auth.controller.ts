@@ -1,5 +1,4 @@
-import { Body, Controller, Res } from '@nestjs/common';
-import { Response as ExpressResponse } from 'express';
+import { Body, Controller } from '@nestjs/common';
 import { Post } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
 import { AuthService } from './auth.service';
@@ -25,22 +24,11 @@ export class AuthController {
   }
 
   @Post('login')
-  async loginUser(
-    @Body() user: LoginDto,
-    @Res({ passthrough: true }) res: ExpressResponse,
-  ) {
+  async loginUser(@Body() user: LoginDto) {
     // 1) Validar usuario/contraseña y obtener token
     const token = await this.authService.loginUser(user);
-    // 2) Fijamos la cookie
-    res.cookie('access_token', token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 1000,
-      path: '/',
-    });
     // 3) En la respuesta, se encargará Nest para que
     // así controle el también las CORS
-    return { message: 'Autenticado correctamente' };
+    return { accessToken: token };
   }
 }
