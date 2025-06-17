@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { RefreshTokenEntity } from './refreshToken.entity';
 
 @Entity('usuarios')
 export class RegisterUserEntity {
@@ -16,4 +17,9 @@ export class RegisterUserEntity {
 
   @Column()
   apellidos_usuario: string;
+
+  @OneToMany(() => RefreshTokenEntity, (token) => token.usuario_id, {
+    onDelete: 'CASCADE',
+  })
+  tokens: RefreshTokenEntity[];
 }

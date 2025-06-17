@@ -1,11 +1,12 @@
-import { Body, Controller } from '@nestjs/common';
+import { Body, Controller, Res } from '@nestjs/common';
 import { Post } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
 import { AuthService } from './auth.service';
 import { hashPassword } from 'src/utils/crypto.utils';
 import { LoginDto } from './dto/login.dto';
+import { Response as ExpressResponse } from 'express';
 
-@Controller('users')
+@Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
@@ -24,11 +25,10 @@ export class AuthController {
   }
 
   @Post('login')
-  async loginUser(@Body() user: LoginDto) {
-    // 1) Validar usuario/contraseña y obtener token
-    const token = await this.authService.loginUser(user);
-    // 3) En la respuesta, se encargará Nest para que
-    // así controle el también las CORS
-    return { accessToken: token };
+  async loginUser(
+    @Body() user: LoginDto,
+    @Res({ passthrough: true }) res: ExpressResponse,
+  ): Promise<{ accessToken: string }> {
+    const { accessToken, refreshToken } = await this.authService.loginUser(user);
   }
 }

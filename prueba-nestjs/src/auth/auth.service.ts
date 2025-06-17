@@ -1,17 +1,18 @@
-import {
-  Injectable,
-  ConflictException,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { Post } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RegisterUserEntity } from './entities/register.entity';
 import { Repository } from 'typeorm';
-import { LoginDto } from './dto/login.dto';
-import { checkPasswordUser } from 'src/utils/crypto.utils';
+import { LoginDto, LoginResponse } from './dto/login.dto';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
+import { validateUser } from 'src/utils/validateUser';
+import crypto from 'crypto';
+import { RefreshTokenEntity } from './entities/refreshToken.entity';
+
+// Constantes
+const ACCESS_EXPIRES = '1h';
+const REFRESH_DAYS = 14;
 
 @Injectable()
 export class AuthService {
@@ -20,11 +21,12 @@ export class AuthService {
   constructor(
     @InjectRepository(RegisterUserEntity)
     private registerUserRepository: Repository<RegisterUserEntity>,
+    private refreshTokenRepository: Repository<RefreshTokenEntity>,
   ) {
     // Construir el token con mi secreto y expiraciónAdd commentMore actions
     this.jwtService = new JwtService({
       secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '1h' } as JwtSignOptions,
+      signOptions: { expiresIn: ACCESS_EXPIRES } as JwtSignOptions,
     });
   }
 
@@ -49,33 +51,36 @@ export class AuthService {
   }
 
   @Post()
-  async loginUser(user: LoginDto) {
+  async loginUser(user: LoginDto): Promise<{ accessToken: string, refreshToken: string }> {
     const userDb = await this.registerUserRepository.findOneBy({
       correo_usuario: user.correo_usuario,
     });
-    // Check si existe usuario para evitar el 'undefined'
-    if (userDb) {
-      const matchPassword = await checkPasswordUser(
-        user.contraseña_usuario,
-        userDb.contraseña_usuario,
+    const matchPassword = await validateUser(user, userDb);
+    if (matchPassword) {
+      // Payload
+      const payload = {
+        sub: userDb!.usuario_id,
+        email: userDb!.correo_usuario,
+      };
+      // 1. Genera el access token
+      const accessToken = this.jwtService.sign(payload);
+      // 2. Genera el refresh token (aleatorio)
+      const refreshToken = crypto.randomBytes(40).toString('hex');
+      const expiresAt = new Date(
+        Date.now() + REFRESH_DAYS * 24 * 60 * 60 * 1000,
       );
-      if (matchPassword) {
-        // Payload del token
-        const payload = {
-          sub: userDb.usuario_id,
-          email: userDb.correo_usuario,
-        };
-        // Generamos token
-        const token = this.jwtService.sign(payload);
-        // Devolvemos token
-        return token;
-      } else {
-        // 401 Unauthorized
-        throw new UnauthorizedException('Contraseña incorrecta');
-      }
-    } else {
-      // 404 Not Found
-      throw new NotFoundException('Usuario no encontrado en la DB');
+      // 4. Creamos entidad
+      const tokenEntity = this.refreshTokenRepository.create({
+        usuario_id: userDb?.usuario_id,
+        token: refreshToken,
+        expiresAt: expiresAt,
+      });
+      // 5. Guardar la entidad
+      await this.refreshTokenRepository.save(tokenEntity);
+      return {
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+      };
     }
   }
 }
