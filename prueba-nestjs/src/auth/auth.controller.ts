@@ -32,6 +32,7 @@ export class AuthController {
   ): Promise<{ accessToken: string }> {
     const { accessToken, refreshToken } =
       await this.authService.loginUser(user);
+    // Refresh token se devuelve por cookie HttpOnly
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: true,
@@ -39,6 +40,7 @@ export class AuthController {
       path: '/auth/refresh',
       maxAge: REFRESH_DAYS * 24 * 60 * 60 * 1000,
     });
+    // Access token lo devolvemos por JSON
     return { accessToken };
   }
 }
