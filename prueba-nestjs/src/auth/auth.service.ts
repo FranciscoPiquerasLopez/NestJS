@@ -4,7 +4,7 @@ import { RegisterDto } from './dto/register.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RegisterUserEntity } from './entities/register.entity';
 import { Repository } from 'typeorm';
-import { LoginDto, LoginResponse } from './dto/login.dto';
+import { LoginDto } from './dto/login.dto';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { validateUser } from 'src/utils/validateUser';
 import crypto from 'crypto';
@@ -51,36 +51,35 @@ export class AuthService {
   }
 
   @Post()
-  async loginUser(user: LoginDto): Promise<{ accessToken: string, refreshToken: string }> {
+  async loginUser(
+    user: LoginDto,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     const userDb = await this.registerUserRepository.findOneBy({
       correo_usuario: user.correo_usuario,
     });
-    const matchPassword = await validateUser(user, userDb);
-    if (matchPassword) {
-      // Payload
-      const payload = {
-        sub: userDb!.usuario_id,
-        email: userDb!.correo_usuario,
-      };
-      // 1. Genera el access token
-      const accessToken = this.jwtService.sign(payload);
-      // 2. Genera el refresh token (aleatorio)
-      const refreshToken = crypto.randomBytes(40).toString('hex');
-      const expiresAt = new Date(
-        Date.now() + REFRESH_DAYS * 24 * 60 * 60 * 1000,
-      );
-      // 4. Creamos entidad
-      const tokenEntity = this.refreshTokenRepository.create({
-        usuario_id: userDb?.usuario_id,
-        token: refreshToken,
-        expiresAt: expiresAt,
-      });
-      // 5. Guardar la entidad
-      await this.refreshTokenRepository.save(tokenEntity);
-      return {
-        accessToken: accessToken,
-        refreshToken: refreshToken,
-      };
-    }
+    // Validamos usuario y contraseña
+    await validateUser(user, userDb);
+    // Payload
+    const payload = {
+      sub: userDb!.usuario_id,
+      email: userDb!.correo_usuario,
+    };
+    // 1. Genera el access token
+    const accessToken = this.jwtService.sign(payload);
+    // 2. Genera el refresh token (aleatorio)
+    const refreshToken = crypto.randomBytes(40).toString('hex');
+    const expiresAt = new Date(Date.now() + REFRESH_DAYS * 24 * 60 * 60 * 1000);
+    // 4. Creamos entidad
+    const tokenEntity = this.refreshTokenRepository.create({
+      usuario: userDb!, // Imposible que sea null, se comprueba en match
+      token: refreshToken,
+      expiresAt: expiresAt,
+    });
+    // 5. Guardar la entidad
+    await this.refreshTokenRepository.save(tokenEntity);
+    return {
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    };
   }
 }

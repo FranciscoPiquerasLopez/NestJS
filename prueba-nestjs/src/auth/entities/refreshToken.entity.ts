@@ -16,8 +16,8 @@ export class RefreshTokenEntity {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
-  @JoinColumn()
-  usuario_id: RegisterUserEntity;
+  @JoinColumn({ name: 'usuario_id' })
+  usuario: RegisterUserEntity;
 
   @Column()
   token: string;

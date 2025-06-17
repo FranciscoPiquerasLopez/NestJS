@@ -18,7 +18,7 @@ export class RegisterUserEntity {
   @Column()
   apellidos_usuario: string;
 
-  @OneToMany(() => RefreshTokenEntity, (token) => token.usuario_id, {
+  @OneToMany(() => RefreshTokenEntity, (token) => token.usuario, {
     onDelete: 'CASCADE',
   })
   tokens: RefreshTokenEntity[];

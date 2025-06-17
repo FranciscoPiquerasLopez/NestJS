@@ -6,6 +6,7 @@ import { hashPassword } from 'src/utils/crypto.utils';
 import { LoginDto } from './dto/login.dto';
 import { Response as ExpressResponse } from 'express';
 
+const REFRESH_DAYS = 14;
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -29,6 +30,15 @@ export class AuthController {
     @Body() user: LoginDto,
     @Res({ passthrough: true }) res: ExpressResponse,
   ): Promise<{ accessToken: string }> {
-    const { accessToken, refreshToken } = await this.authService.loginUser(user);
+    const { accessToken, refreshToken } =
+      await this.authService.loginUser(user);
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      path: '/auth/refresh',
+      maxAge: REFRESH_DAYS * 24 * 60 * 60 * 1000,
+    });
+    return { accessToken };
   }
 }
