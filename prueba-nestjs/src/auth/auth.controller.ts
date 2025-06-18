@@ -28,8 +28,8 @@ export class AuthController {
   @Post('login')
   async loginUser(
     @Body() user: LoginDto,
-    @Res({ passthrough: true }) res: ExpressResponse,
-  ): Promise<{ accessToken: string }> {
+    @Res() res: ExpressResponse,
+  ): Promise<void> {
     const { accessToken, refreshToken } =
       await this.authService.loginUser(user);
     // Refresh token se devuelve por cookie HttpOnly
@@ -37,10 +37,10 @@ export class AuthController {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      path: '/auth/refresh',
+      path: '/auth/refresh', // Para decirle al navegador que te adjunte esta cookie en esta petición
       maxAge: REFRESH_DAYS * 24 * 60 * 60 * 1000,
     });
     // Access token lo devolvemos por JSON
-    return { accessToken };
+    res.json({ accessToken });
   }
 }

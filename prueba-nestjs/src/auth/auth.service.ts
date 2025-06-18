@@ -7,8 +7,8 @@ import { Repository } from 'typeorm';
 import { LoginDto } from './dto/login.dto';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { validateUser } from 'src/utils/validateUser';
-import crypto from 'crypto';
 import { RefreshTokenEntity } from './entities/refreshToken.entity';
+import { randomBytes } from 'crypto';
 
 // Constantes
 const ACCESS_EXPIRES = '1h';
@@ -21,6 +21,7 @@ export class AuthService {
   constructor(
     @InjectRepository(RegisterUserEntity)
     private registerUserRepository: Repository<RegisterUserEntity>,
+    @InjectRepository(RefreshTokenEntity)
     private refreshTokenRepository: Repository<RefreshTokenEntity>,
   ) {
     // Construir el token con mi secreto y expiraciónAdd commentMore actions
@@ -67,13 +68,15 @@ export class AuthService {
     // 1. Genera el access token
     const accessToken = this.jwtService.sign(payload);
     // 2. Genera el refresh token (aleatorio)
-    const refreshToken = crypto.randomBytes(40).toString('hex');
+    const refreshToken = randomBytes(40).toString('hex');
     const expiresAt = new Date(Date.now() + REFRESH_DAYS * 24 * 60 * 60 * 1000);
+    const createdAt = new Date(Date.now());
     // 4. Creamos entidad
     const tokenEntity = this.refreshTokenRepository.create({
-      usuario: userDb!, // Imposible que sea null, se comprueba en match
+      usuario: userDb!,
       token: refreshToken,
       expiresAt: expiresAt,
+      createdAt: createdAt,
     });
     // 5. Guardar la entidad
     await this.refreshTokenRepository.save(tokenEntity);
