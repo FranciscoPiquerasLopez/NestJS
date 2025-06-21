@@ -1,10 +1,13 @@
-import { Body, Controller, Res } from '@nestjs/common';
+import { Body, Controller, Get, Req, Res } from '@nestjs/common';
 import { Post } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
 import { AuthService } from './auth.service';
 import { hashPassword } from 'src/utils/crypto.utils';
 import { LoginDto } from './dto/login.dto';
-import { Response as ExpressResponse } from 'express';
+import {
+  Response as ExpressResponse,
+  Request as ExpressRequest,
+} from 'express';
 
 const REFRESH_DAYS = 14;
 @Controller('auth')
@@ -33,14 +36,20 @@ export class AuthController {
     const { accessToken, refreshToken } =
       await this.authService.loginUser(user);
     // Refresh token se devuelve por cookie HttpOnly
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
+    res.cookie('refresh_token', refreshToken, {
+      httpOnly: true, // protege frente a XSS
       secure: true,
       sameSite: 'strict',
-      path: '/auth/refresh', // Para decirle al navegador que te adjunte esta cookie en esta petición
-      maxAge: REFRESH_DAYS * 24 * 60 * 60 * 1000,
+      path: '/', // válido para todas las rutas de la API
+      maxAge: REFRESH_DAYS * 24 * 60 * 60 * 1000, // 14 días de expiración
     });
     // Access token lo devolvemos por JSON
     res.json({ accessToken });
+  }
+
+  @Get('refresh')
+  refreshToken(@Req() req: ExpressRequest) {
+    const cookie = req.cookies;
+    console.log(cookie);
   }
 }

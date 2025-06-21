@@ -1,4 +1,4 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, Get } from '@nestjs/common';
 import { Post } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -85,4 +85,7 @@ export class AuthService {
       refreshToken: refreshToken,
     };
   }
+
+  @Get()
+  async refreshToken() {}
 }
