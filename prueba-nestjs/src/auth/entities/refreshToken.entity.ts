@@ -12,12 +12,17 @@ export class RefreshTokenEntity {
   @PrimaryGeneratedColumn()
   id_token: number;
 
+  // 1️⃣ la relación ManyToOne
   @ManyToOne(() => RegisterUserEntity, (usuario) => usuario.tokens, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
   @JoinColumn({ name: 'usuario_id' })
   usuario: RegisterUserEntity;
+
+  // 2️⃣ el “campo sombra” que refleja la FK
+  @Column({ name: 'usuario_id' })
+  usuario_id: number;
 
   @Column()
   token: string;

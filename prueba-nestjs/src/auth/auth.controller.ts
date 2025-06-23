@@ -48,8 +48,11 @@ export class AuthController {
   }
 
   @Get('refresh')
-  refreshToken(@Req() req: ExpressRequest) {
-    const cookie = req.cookies;
-    console.log(cookie);
+  async refreshToken(@Req() req: ExpressRequest): Promise<string> {
+    const { refresh_token } = req.cookies;
+    const accessToken = await this.authService.refreshToken(
+      refresh_token as string,
+    );
+    return accessToken;
   }
 }

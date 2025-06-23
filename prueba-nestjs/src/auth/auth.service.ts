@@ -1,4 +1,9 @@
-import { Injectable, ConflictException, Get } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  Get,
+  NotFoundException,
+} from '@nestjs/common';
 import { Post } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -87,5 +92,26 @@ export class AuthService {
   }
 
   @Get()
-  async refreshToken() {}
+  async refreshToken(refreshTokenCookie: string): Promise<string> {
+    const refreshTokenDb = await this.refreshTokenRepository.findOneBy({
+      token: refreshTokenCookie,
+    });
+    // Existe el refresh token en la DB
+    if (refreshTokenDb !== null) {
+      const userDb = await this.registerUserRepository.findOneBy({
+        usuario_id: refreshTokenDb.usuario_id,
+      });
+      // Payload
+      const payload = {
+        sub: userDb!.usuario_id,
+        email: userDb!.correo_usuario,
+      };
+      const accessToken = this.jwtService.sign(payload);
+      return accessToken;
+    } else {
+      throw new NotFoundException(
+        'Refresh token no encontrado en la base de datos',
+      );
+    }
+  }
 }
