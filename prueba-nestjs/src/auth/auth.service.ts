@@ -3,6 +3,7 @@ import {
   ConflictException,
   Get,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Post } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
@@ -93,11 +94,23 @@ export class AuthService {
 
   @Get()
   async refreshToken(refreshTokenCookie: string): Promise<string> {
+    // Buscamos si existe el refresh token del usuario en la DB
     const refreshTokenDb = await this.refreshTokenRepository.findOneBy({
       token: refreshTokenCookie,
     });
     // Existe el refresh token en la DB
     if (refreshTokenDb !== null) {
+      const now = new Date();
+      // Refresh token expirado --->
+      if (refreshTokenDb?.expiresAt.getTime() < now.getTime()) {
+        // Lo eliminamos de la DB
+        await this.refreshTokenRepository.delete({
+          id_token: refreshTokenDb?.id_token,
+        });
+        // Lanzamos error
+        throw new UnauthorizedException('Refresh token expirado');
+      }
+      // Refresh token NO expirado --->
       const userDb = await this.registerUserRepository.findOneBy({
         usuario_id: refreshTokenDb.usuario_id,
       });
