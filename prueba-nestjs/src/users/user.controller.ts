@@ -1,9 +1,11 @@
-import { Controller, Post } from '@nestjs/common';
+import { Controller, Get, UseGuards } from '@nestjs/common';
+import { JwtGuard } from 'src/core/jwt.guard';
 
 @Controller('users')
 export class UserController {
-  @Post()
-  postUser(): string {
+  @UseGuards(JwtGuard)
+  @Get('dataUser')
+  getUser(): string {
     return 'Hello user';
   }
 }
