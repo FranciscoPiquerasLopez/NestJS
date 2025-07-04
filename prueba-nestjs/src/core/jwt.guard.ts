@@ -10,8 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class JwtGuard implements CanActivate {
-  private readonly jwtService: JwtService;
-  constructor() {}
+  constructor(private readonly jwtService: JwtService) {}
 
   canActivate(
     context: ExecutionContext,
