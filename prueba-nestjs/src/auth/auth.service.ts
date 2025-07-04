@@ -11,31 +11,23 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { RegisterUserEntity } from './entities/register.entity';
 import { Repository } from 'typeorm';
 import { LoginDto } from './dto/login.dto';
-import { JwtService, JwtSignOptions } from '@nestjs/jwt';
+import { JwtService } from '@nestjs/jwt';
 import { validateUser } from 'src/utils/validateUser';
 import { RefreshTokenEntity } from './entities/refreshToken.entity';
 import { randomBytes } from 'crypto';
 
 // Constantes
-const ACCESS_EXPIRES = '1h';
 const REFRESH_DAYS = 14;
 
 @Injectable()
 export class AuthService {
-  private readonly jwtService: JwtService;
-
   constructor(
     @InjectRepository(RegisterUserEntity)
     private registerUserRepository: Repository<RegisterUserEntity>,
     @InjectRepository(RefreshTokenEntity)
     private refreshTokenRepository: Repository<RefreshTokenEntity>,
-  ) {
-    // Construir el token con mi secreto y expiraciónAdd commentMore actions
-    this.jwtService = new JwtService({
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: ACCESS_EXPIRES } as JwtSignOptions,
-    });
-  }
+    private readonly jwtService: JwtService,
+  ) {}
 
   @Post()
   async registerUser(user: RegisterDto) {

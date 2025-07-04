@@ -2,10 +2,14 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
+import { UserModule } from './users/user.module';
+import { GlobalJwtConfiguration } from './globalJwtConfiguration.module';
 
 @Module({
   imports: [
+    GlobalJwtConfiguration,
     AuthModule,
+    UserModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env.development.local', '.env'],
